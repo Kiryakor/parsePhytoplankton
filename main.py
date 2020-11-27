@@ -42,7 +42,7 @@ class ParseSecondBlock:
         self.path = path
         self.parseData = []
         self.parseState = ParseEnum.notGood
-        self.doc_result = docx2python('mt.docx')
+        self.doc_result = docx2python(path)
 
         self.startParse()
 
@@ -135,4 +135,4 @@ class ParseSecondBlock:
 
             self.saveData()
 
-data = ParseSecondBlock('mt.docx')
+ParseSecondBlock('mt.docx')
