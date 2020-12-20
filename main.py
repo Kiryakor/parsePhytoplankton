@@ -10,7 +10,7 @@ class PhytoplanktonEnum(Enum):
     notGood = 4
 
 class HeaderModel:
-    """Модель для хранения свойств первой таблицы"""
+    """Модель для хранения свойств заголовка таблицы"""
     def __init__(self, water="", date="", station="", depth="", temperature="", alpha="", author=""):
         self.water = water
         self.date = date
@@ -39,22 +39,24 @@ class PhytoplanktonModel:
 class ParsePhytoplankton:
     """Класс для парсинга данных о фитопланктоне"""
 
-    def __init__(self, path, isStart=True):
-        """
-            path - путь к файлу с исходными данными
-            isStart - по умолчанию True - вызывает метод startParse
-        """
+    def __init__(self, path):
+        """ path - путь к файлу с исходными данными """
         self.path = path
         self.parseData = []
         self.parseState = PhytoplanktonEnum.notGood
+        self.isStart = True
 
-        self.doc_result = docx2python(path)
+        try:
+            self.doc_result = docx2python(path)
+        except:
+            print("Файл не найден")
+            isStart = False
 
-        if isStart:
+        if self.isStart:
             self.startParse()
 
     def headerParse(self, content, header):
-        """Метод для парсинг первой таблицы"""
+        """Метод для парсинг заголовка таблицы"""
         if "Водоем:" in content:
             frst = content.find("Дата")
             scnd = content.find("Станция")
@@ -71,7 +73,7 @@ class ParsePhytoplankton:
             header.author = content[12:].strip()
 
     def taksonOrDepartmentParse(self, content):
-        """Метод для парсинг 2 и 3 таблицы"""
+        """Метод для парсинг таблиц: Отдел и Таксон"""
         if content[0][0] != "Отдел" and content[0][0] != "Таксон":
             return TaksonOrDepartmentModel(content[0][0], content[1][0], content[2][0], content[3][0], content[4][0])
         return 0
