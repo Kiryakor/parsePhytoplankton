@@ -2,15 +2,15 @@ from docx2python import docx2python
 from enum import Enum
 import csv
 
-class ParseEnum(Enum):
+class PhytoplanktonEnum(Enum):
     """Перечисление для отслеживания таблицы, которая парсится в данный момент"""
     header = 1
     body = 2
     bottom = 3
     notGood = 4
 
-class Header:
-    """Класс для хранения свойств первой таблицы"""
+class HeaderModel:
+    """Модель для хранения свойств первой таблицы"""
     def __init__(self, water="", date="", station="", depth="", temperature="", alpha="", author=""):
         self.water = water
         self.date = date
@@ -20,8 +20,8 @@ class Header:
         self.alpha = alpha
         self.author = author
 
-class Takson:
-    """Класс для хранения свойств 2 и 3 таблицы"""
+class TaksonOrDepartmentModel:
+    """Модель для хранения свойств таблиц: Отдел и Таксон"""
     def __init__(self, takson, counter, bioMassa, percentCounter, percentBioMassa):
         self.takson = takson
         self.counter = counter
@@ -29,48 +29,64 @@ class Takson:
         self.percentCounter = percentCounter
         self.percentBioMassa = percentBioMassa
 
-class Content:
-    """Класс для ханения данных одной полной таблицы"""
+class PhytoplanktonModel:
+    """Модель для ханения данных одной полной таблице о фитопланктоне"""
     def __init__(self, head, body, bottom):
         self.head = head
         self.body = body
         self.bottom = bottom
 
-class ParseSecondBlock:
+class ParsePhytoplankton:
+    """Класс для парсинга данных о фитопланктоне"""
 
-    def __init__(self, path):
+    def __init__(self, path, isStart=True):
+        """
+            path - путь к файлу с исходными данными
+            isStart - по умолчанию True - вызывает метод startParse
+        """
         self.path = path
         self.parseData = []
+<<<<<<< HEAD
+        self.parseState = PhytoplanktonEnum.notGood
+=======
         self.parseState = ParseEnum.notGood
+>>>>>>> f65779f242e30e5c17c98a5bab6b9cf7f984a544
         self.doc_result = docx2python(path)
 
-        self.startParse()
+        if isStart:
+            self.startParse()
 
-    def parse1(self, content, header):
+    def headerParse(self, content, header):
         """Метод для парсинг первой таблицы"""
         if "Водоем:" in content:
-            a = content.find("Дата")
-            b = content.find("Станция")
-            header.water = content[7:a].strip()
-            header.date = content[a + 5:b].strip()
-            header.station = content[b + 8:].strip()
+            frst = content.find("Дата")
+            scnd = content.find("Станция")
+            header.water = content[7:frst].strip()
+            header.date = content[frst + 5:scnd].strip()
+            header.station = content[scnd + 8:].strip()
         elif "Глубина:" in content:
-            a = content.find("Температура")
-            b = content.find("Прозрачность")
-            header.depth = content[8:a].strip()
-            header.temperature = content[a + 12:b].strip()
-            header.alpha = content[b + 13:].strip()
+            frst = content.find("Температура")
+            scnd = content.find("Прозрачность")
+            header.depth = content[8:frst].strip()
+            header.temperature = content[frst + 12:scnd].strip()
+            header.alpha = content[scnd + 13:].strip()
         elif "Исполнитель:" in content:
             header.author = content[12:].strip()
 
-    def parse3(self, content):
+    def taksonOrDepartmentParse(self, content):
         """Метод для парсинг 2 и 3 таблицы"""
         if content[0][0] != "Отдел" and content[0][0] != "Таксон":
-            return Takson(content[0][0], content[1][0], content[2][0], content[3][0], content[4][0])
+            return TaksonOrDepartmentModel(content[0][0], content[1][0], content[2][0], content[3][0], content[4][0])
         return 0
 
     def saveData(self):
-        with open('header.tsv', 'wt') as out_file:
+        """
+            Метод для сохранения данных в файлы:
+                      headerPhytoplankton.tsv,
+                      bodyPhytoplankton.tsv,
+                      bottomPhytoplankton.tsv
+        """
+        with open('headerPhytoplankton.tsv', 'wt') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             counter = 0
             for i in self.parseData:
@@ -79,7 +95,7 @@ class ParseSecondBlock:
                      i.head.author])
                 counter += 1
 
-        with open('body.tsv', 'wt') as out_file:
+        with open('bodyPhytoplankton.tsv', 'wt') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             counter = 0
             for i in self.parseData:
@@ -87,7 +103,7 @@ class ParseSecondBlock:
                     tsv_writer.writerow([counter, j.takson, j.counter, j.bioMassa, j.percentCounter, j.percentBioMassa])
                 counter += 1
 
-        with open('bottom.tsv', 'wt') as out_file:
+        with open('bottomPhytoplankton.tsv', 'wt') as out_file:
             tsv_writer = csv.writer(out_file, delimiter='\t')
             counter = 0
             for i in self.parseData:
@@ -96,8 +112,9 @@ class ParseSecondBlock:
                 counter += 1
 
     def startParse(self):
+        """Главный метод для парсинга"""
         for j in self.doc_result.body:
-            header = Header()
+            header = HeaderModel()
             bottom = []
             body = []
 
@@ -106,33 +123,34 @@ class ParseSecondBlock:
                     continue
 
                 if "Водоем:" in i[0][0]:
-                    self.parseState = ParseEnum.header
+                    self.parseState = PhytoplanktonEnum.header
                 elif "Таксон" == i[0][0]:
-                    self.parseState = ParseEnum.body
+                    self.parseState = PhytoplanktonEnum.body
                 elif "Отдел" == i[0][0]:
-                    self.parseState = ParseEnum.bottom
+                    self.parseState = PhytoplanktonEnum.bottom
                 elif "Всего" == i[0][0]:
-                    takson = self.parse3(i)
+                    takson = self.taksonOrDepartmentParse(i)
                     if takson != 0:
                         bottom.append(takson)
-                    self.parseState = ParseEnum.notGood
+                    self.parseState = PhytoplanktonEnum.notGood
 
-                if self.parseState == ParseEnum.header:
-                    self.parse1(i[0][0], header)
-                elif self.parseState == ParseEnum.body or self.parseState == ParseEnum.bottom:
-                    takson = self.parse3(i)
-                    if takson != 0 and self.parseState == ParseEnum.body:
+                if self.parseState == PhytoplanktonEnum.header:
+                    self.headerParse(i[0][0], header)
+                elif self.parseState == PhytoplanktonEnum.body or self.parseState == PhytoplanktonEnum.bottom:
+                    takson = self.taksonOrDepartmentParse(i)
+                    if takson != 0 and self.parseState == PhytoplanktonEnum.body:
                         body.append(takson)
-                    elif takson != 0 and self.parseState == ParseEnum.bottom:
+                    elif takson != 0 and self.parseState == PhytoplanktonEnum.bottom:
                         bottom.append(takson)
-                elif self.parseState == ParseEnum.notGood:
-                    pass
-                else:
-                    print("Error in parseState")
 
             if header.author != "":
-                self.parseData.append(Content(header, body, bottom))
+                self.parseData.append(PhytoplanktonModel(header, body, bottom))
 
             self.saveData()
 
+<<<<<<< HEAD
+ParsePhytoplankton('data.docx')
+
+=======
 ParseSecondBlock('mt.docx')
+>>>>>>> f65779f242e30e5c17c98a5bab6b9cf7f984a544
