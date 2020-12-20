@@ -46,11 +46,8 @@ class ParsePhytoplankton:
         """
         self.path = path
         self.parseData = []
-<<<<<<< HEAD
         self.parseState = PhytoplanktonEnum.notGood
-=======
-        self.parseState = ParseEnum.notGood
->>>>>>> f65779f242e30e5c17c98a5bab6b9cf7f984a544
+
         self.doc_result = docx2python(path)
 
         if isStart:
@@ -148,9 +145,4 @@ class ParsePhytoplankton:
 
             self.saveData()
 
-<<<<<<< HEAD
 ParsePhytoplankton('data.docx')
-
-=======
-ParseSecondBlock('mt.docx')
->>>>>>> f65779f242e30e5c17c98a5bab6b9cf7f984a544
