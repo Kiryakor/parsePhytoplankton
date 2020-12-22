@@ -50,7 +50,7 @@ class ParsePhytoplankton:
             self.doc_result = docx2python(path)
         except:
             print("Файл не найден")
-            isStart = False
+            self.isStart = False
 
         if self.isStart:
             self.startParse()
